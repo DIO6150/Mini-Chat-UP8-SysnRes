@@ -4,6 +4,7 @@
 #include "headers/utils.hpp"
 
 #include <algorithm>
+#include <ctime>
 #include <sstream>
 
 #define MAX_CLIENTS_ROOM 10
@@ -38,8 +39,11 @@ int main (int argc, char **argv)
 					trim (message);
 					if (message == "") return ("ERROR 10"); // arguments invalides (message vide)
 
+					time_t timestamp;
+					time (&timestamp);
+
 					std::string answer;
-					answer = "SPEAK " + context [1] + " " + client.GetUserName ();
+					answer = "SPEAK " + context [1] + " " + client.GetUserName () + " " + std::to_string (timestamp);
 					
 					for (auto& c : clients)
 					{
@@ -63,8 +67,11 @@ int main (int argc, char **argv)
 					
 					if (message == "") return ("ERROR 10"); // arguments invalides (message vide)
 
+					time_t timestamp;
+					time (&timestamp);
+
 					std::string answer;
-					answer = "MSGPV " + args[0] + " " + client.GetUserName ();
+					answer = "MSGPV " + args[0] + " " + client.GetUserName () + " " + std::to_string (timestamp);
 					
 					server.Broadcast (client, answer);
 					server.Broadcast (client, message);
@@ -77,6 +84,9 @@ int main (int argc, char **argv)
 		},
 		[] (std::vector<std::string> args, Client &client) -> std::string {
 			return ("ALIVE");
+		},
+		[] (std::vector<std::string> args, Client &client) -> std::string {
+			return ("TCHAT 1");
 		},
 	};
 
@@ -116,9 +126,12 @@ int main (int argc, char **argv)
 		if (std::find (clients.begin (), clients.end (), &client) != clients.end ()) return ("ERROR 35"); // déjà dans le groupe
 		
 		rooms [room_name].push_back (&client);
+
+		time_t timestamp;
+		time (&timestamp);
 		
 		std::string answer;
-		answer = "ENTER " + room_name + " " + client.GetUserName ();
+		answer = "ENTER " + room_name + " " + client.GetUserName () + " " + std::to_string (timestamp);
 
 		for (auto& c : clients)
 		{
@@ -144,8 +157,11 @@ int main (int argc, char **argv)
 		
 		(*pos) = nullptr;
 
+		time_t timestamp;
+		time (&timestamp);
+
 		std::string answer;
-		answer = "LEAVE " + room_name + " " + client.GetUserName ();
+		answer = "LEAVE " + room_name + " " + client.GetUserName () + " " + std::to_string (timestamp);
 
 		for (auto& c : clients)
 		{
@@ -201,7 +217,7 @@ int main (int argc, char **argv)
 		rooms.insert ({room_name, std::vector <Client *>{MAX_CLIENTS_ROOM}});
 		rooms [room_name].emplace (rooms [room_name].begin (), &client);
 
-		return ("OKAY !");
+		return ("OKAY!");
 	});
 
 	protocol.RegisterRule ("SPEAK", [&rooms, &server](std::vector<std::string> args, Client &client) -> std::string {
@@ -240,7 +256,7 @@ int main (int argc, char **argv)
 
 		client.SetDeadSuspicionFlag (false);
 
-		return ("OKAY");
+		return ("OKAY!");
 	});
 
 	server.SetProtocol (protocol);

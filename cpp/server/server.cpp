@@ -181,10 +181,12 @@ void Server::Listen ()
 
 		if (client_socket > 0)
 		{
-			std::lock_guard<std::mutex> guard_o {m_observers_mutex};
-			std::lock_guard<std::mutex> guard_c {m_clients_mutex};
+			std::lock_guard<std::mutex> guard_c {m_mutex};
 
 			Client &client = RegisterClient (client_socket, {m_id_counter++, client_socket});
+
+			std::string message = m_protocol.GetConnectionRule () ({}, client);
+			Broadcast (client, message);
 			fprintf (stderr, "Client [%d] joined.\n", client.GetID ());
 		}
 	}
@@ -215,8 +217,7 @@ void Server::Start ()
 
 	for (;;)
 	{
-		m_observers_mutex.lock ();
-		m_clients_mutex.lock ();
+		m_mutex.lock ();
 
 		poll (m_observers.data (), m_observers.size (), 0);
 
@@ -272,8 +273,7 @@ void Server::Start ()
 				HandleClient (*client, std::string {buffer});
 			}
 		}
-		m_clients_mutex.unlock ();
-		m_observers_mutex.unlock ();
+		m_mutex.unlock ();
 	}
 		
 	listen_thread.join ();

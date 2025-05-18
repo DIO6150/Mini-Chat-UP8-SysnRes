@@ -16,10 +16,9 @@ class Server
     int                                     m_socket;
 
     std::vector <pollfd>                    m_observers;
-    std::mutex                              m_observers_mutex;
-
     std::unordered_map <int, Client>        m_clients;
-    std::mutex                              m_clients_mutex;
+
+    std::mutex                              m_mutex;
 
     int                                     m_id_counter;
 

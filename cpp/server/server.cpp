@@ -106,10 +106,17 @@ Client &Server::RegisterClient (int fd, Client data)
 */
 void Server::UnregisterClient (int fd)
 {
-	if (!m_clients.erase (fd))
+	if (m_clients.find (fd) == m_clients.end ())
 	{
 		fprintf (stderr, "Client cannot be removed as its file descriptor is not registered.");
 	}
+
+	Client *client = &m_clients [fd];
+
+	REQUEST_CALLBACK disconnect = m_protocol.GetDisconnectionRule ();
+	disconnect ({}, *client);
+
+	m_clients.erase (fd);
 
 	close (fd);
 
@@ -129,6 +136,8 @@ void Server::HandleClient (Client &client, std::string request)
 	client.UpdateActivity ();
 
 	trim (request);
+
+	fprintf (stderr, "Client [%d] %s\n", client.GetID (), request.c_str ());
 
 	if (client.IsTalking ())
 	{
@@ -266,8 +275,10 @@ void Server::Start ()
 						continue;
 					}
 
-					fprintf (stderr, "Error here it seemeth : %d; %s; size of m_clients: %ld\n", err, strerror (errno), m_observers.size ());
-					exit (EXIT_FAILURE);
+					fprintf (stderr, "Client [%d] disconnected : %s.\n", client->GetID (), strerror (errno));
+					UnregisterClient (client_fd);
+					--i;
+					continue;
 				}
 				
 				HandleClient (*client, std::string {buffer});

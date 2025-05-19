@@ -88,6 +88,31 @@ int main (int argc, char **argv)
 		[] (std::vector<std::string> args, Client &client) -> std::string {
 			return ("TCHAT 1");
 		},
+		[&usernames, &rooms, &server] (std::vector<std::string> args, Client &client) -> std::string {
+			if (!client.IsLoggedIn ()) return ("");
+			usernames.erase (client.GetUserName ());
+			std::vector<Client *>::iterator pos;
+			for (auto& room : rooms)
+			{
+				if ((pos = std::find (room.second.begin (), room.second.end (), &client)) != room.second.end ())
+				{
+					time_t timestamp;
+					time (&timestamp);
+
+					(*pos) = nullptr;
+
+					std::string answer;
+					answer = "LEAVE " + room.first + " " + client.GetUserName () + " " + std::to_string (timestamp);
+
+					for (auto& c : room.second)
+					{
+						if (!c) continue;
+						server.Broadcast (*c, answer);
+					}
+				}
+			}
+			return ("");
+		}
 	};
 
 	protocol.RegisterRule ("LOGIN", [&usernames](std::vector<std::string> args, Client &client) -> std::string {
@@ -256,7 +281,7 @@ int main (int argc, char **argv)
 
 		client.SetDeadSuspicionFlag (false);
 
-		return ("OKAY!");
+		return ("");
 	});
 
 	server.SetProtocol (protocol);

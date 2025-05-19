@@ -7,11 +7,17 @@ Protocol::Protocol ()
     // GRRR why can't I declare and not initialize something
 }
 
-Protocol::Protocol (REQUEST_CALLBACK unkown_command, REQUEST_CALLBACK talk_callback, REQUEST_CALLBACK alive_callback, REQUEST_CALLBACK connection_callback) : 
+Protocol::Protocol (
+    REQUEST_CALLBACK unkown_command,
+    REQUEST_CALLBACK talk_callback,
+    REQUEST_CALLBACK alive_callback,
+    REQUEST_CALLBACK connection_callback,
+    REQUEST_CALLBACK disconnection_callback) : 
 m_unkown_command_callback (unkown_command),
 m_talk_callback (talk_callback),
 m_alive_callback (alive_callback),
-m_connection_callback (connection_callback)
+m_connection_callback (connection_callback),
+m_disconnection_callback (disconnection_callback)
 {
 
 }
@@ -46,6 +52,12 @@ REQUEST_CALLBACK &Protocol::GetConnectionRule ()
 {
     return (m_connection_callback);
 }
+
+REQUEST_CALLBACK &Protocol::GetDisconnectionRule ()
+{
+    return (m_disconnection_callback);
+}
+
 
 std::vector<std::string> Protocol::GetTokens (std::string message)
 {

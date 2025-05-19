@@ -16,13 +16,15 @@ class Protocol
     REQUEST_CALLBACK m_talk_callback;
     REQUEST_CALLBACK m_alive_callback; // i'm calling this a request_callback but it isn't, in fact the server does that on its own so the polar opposite of a request
     REQUEST_CALLBACK m_connection_callback;
+    REQUEST_CALLBACK m_disconnection_callback;
 
 public:
     Protocol ();
     Protocol (  REQUEST_CALLBACK unkown_command,
                 REQUEST_CALLBACK talk_callback,
                 REQUEST_CALLBACK alive_callback,
-                REQUEST_CALLBACK connection_callback
+                REQUEST_CALLBACK connection_callback,
+                REQUEST_CALLBACK disconnection_callback
             );
 
     void RegisterRule (std::string name, REQUEST_CALLBACK callback);
@@ -31,6 +33,7 @@ public:
     REQUEST_CALLBACK &GetTalkRule ();
     REQUEST_CALLBACK &GetAliveRule ();
     REQUEST_CALLBACK &GetConnectionRule ();
+    REQUEST_CALLBACK &GetDisconnectionRule ();
 
     std::vector<std::string> GetTokens (std::string message);
 };

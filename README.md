@@ -23,8 +23,6 @@ srv: ERROR 11                          // commande inexistante
 
 ### Connexion
 
-_**pas implémenté**_
-
 ```cpp
 srv: TCHAT 1                           // numéro de version du protocole
 ```

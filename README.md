@@ -3,16 +3,16 @@
 ## Serveur
 
 On peut compiler le serveur en se rendant dans ```/cpp/server/``` et en tappant la commande ```g++ *.cpp -Iheaders -o server```.
+Il peut être executé avec ```./server <port="12345">```
 
 
 ## Client
 
-Le client qui se situera dans ```/python/client/``` n'exuste pas encore.
-Pour le moment, connectez vous avec ```netcat``` à l'adresse ```localhost``` et sur le port ```12345``` ex: ```netcat localhost 12345```.
+Le client se trouve dans ```python/client/``` et peut s'executer avec ```python3 main.py <host="localhost"> <port=12345>```:
 
 ## Protocole
 
-Bien que n'étant pas tout à fait fini, le protocole d'échange est le suivant : (ce qu'envoie le client est précédé de ```clt:``` et le serveur de ```srv```)
+Le protocole d'échange est le suivant : (ce qu'envoie le client est précédé de ```clt:``` et le serveur de ```srv```)
 
 ### Erreurs génériques
 

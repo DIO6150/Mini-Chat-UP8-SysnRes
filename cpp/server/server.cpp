@@ -19,13 +19,16 @@
 
 #define TIMEOUT_SUS 	15
 #define TIMEOUT_KILL 	30
+#define CHECK_INACTIVITY true
 
-// TODO : importer ma library string color pour être plus rigolo
 
-Server::Server ()
+Server::Server (): Server {(char *)"12345"}
 {
-	// TODO : make the port modifiable
-	char port[]			 = "12345";
+
+}
+
+Server::Server (char *port)
+{
 	struct addrinfo 		hints, *gai, *ai;
 	int						err;
 	int						yes;
@@ -77,6 +80,8 @@ Server::Server ()
 	}
 
 	m_id_counter = 0;
+
+	fprintf (stderr, "Server created on port: %s\n", port);
 }
 
 Server::~Server ()
@@ -136,24 +141,31 @@ void Server::HandleClient (Client &client, std::string request)
 	client.UpdateActivity ();
 
 	trim (request);
+	if (request == "") return;
 
 	fprintf (stderr, "Client [%d] %s\n", client.GetID (), request.c_str ());
 
-	if (client.IsTalking ())
-	{
-		REQUEST_CALLBACK& rule = m_protocol.GetTalkRule ();
-		std::string answer = rule ({request}, client);
-		trim (answer);
-		Broadcast (client, answer);
+	std::vector<std::string> buffered = split (request, "\n");
 
-		return;
+	for (auto& r : buffered)
+	{
+		if (client.IsTalking ())
+		{
+			REQUEST_CALLBACK& rule = m_protocol.GetTalkRule ();
+			std::string answer = rule ({r}, client);
+			trim (answer);
+			Broadcast (client, answer);
+
+			continue;
+		}
+
+		auto tokens = m_protocol.GetTokens (r);
+		REQUEST_CALLBACK& rule = m_protocol.GetRule (tokens [0]);
+	
+		std::string answer = rule (tokens, client);
+		Broadcast (client, answer);
 	}
 
-	auto tokens = m_protocol.GetTokens (request);
-	REQUEST_CALLBACK& rule = m_protocol.GetRule (tokens [0]);
-
-	std::string answer = rule (tokens, client);
-	Broadcast (client, answer);
 }
 
 void Server::SetProtocol (Protocol protocol)
@@ -224,6 +236,8 @@ void Server::Start ()
 
 	std::thread listen_thread {[this]() { this->Listen (); }};
 
+	fprintf (stderr, "Starting is now running\n");
+
 	for (;;)
 	{
 		m_mutex.lock ();
@@ -245,7 +259,7 @@ void Server::Start ()
 				Broadcast (*client, message);
 			}
 
-			if (timestamp - client->GetLastActivity () >= TIMEOUT_KILL && client->IsSuspious () && !client->IsDead ())
+			if (CHECK_INACTIVITY && timestamp - client->GetLastActivity () >= TIMEOUT_KILL && client->IsSuspious () && !client->IsDead ())
 			{
 				fprintf (stderr, "Client [%d] disconnected (timeout)\n", client->GetID ());
 				UnregisterClient (client_fd);

@@ -13,6 +13,7 @@
 
 class Server
 {
+    char                                    *m_port;
     int                                     m_socket;
 
     std::vector <pollfd>                    m_observers;
@@ -32,6 +33,7 @@ class Server
     void Listen ();
     
 public:
+    Server (char *port);
     Server ();
     ~Server ();
     

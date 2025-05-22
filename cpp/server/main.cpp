@@ -11,10 +11,15 @@
 
 int main (int argc, char **argv)
 {
+	char* port = nullptr;
+	const char* default_port = "12345";
+
+	if (argc == 2) port = argv [1];
+	else port = (char *) default_port;
 
 	std::unordered_map <std::string, std::vector <Client *>> rooms;
 	std::unordered_map <std::string, Client *> usernames;
-	Server server {};
+	Server server {port};
 
 	Protocol protocol {
 		[] (std::vector<std::string> args, Client &client) -> std::string {
@@ -43,14 +48,12 @@ int main (int argc, char **argv)
 					time (&timestamp);
 
 					std::string answer;
-					answer = "SPEAK " + context [1] + " " + client.GetUserName () + " " + std::to_string (timestamp);
-					
+					answer = "SPEAK " + client.GetUserName () + " " + context [1] + " " + std::to_string (timestamp) + "\n" + message + "\n";
 					for (auto& c : clients)
 					{
 						if (!c) continue;
 
 						server.Broadcast (*c, answer);
-						server.Broadcast (*c, message);
 					}
 				}
 			}
@@ -71,13 +74,9 @@ int main (int argc, char **argv)
 					time (&timestamp);
 
 					std::string answer;
-					answer = "MSGPV " + args[0] + " " + client.GetUserName () + " " + std::to_string (timestamp);
-					
-					server.Broadcast (client, answer);
-					server.Broadcast (client, message);
+					answer = "MSGPV " + client.GetUserName () + " " + std::to_string (timestamp) + "\n" + message + "\n";
 
 					server.Broadcast (*other, answer);
-					server.Broadcast (*other, message);
 				}
 			}
 			return ("");
@@ -267,7 +266,7 @@ int main (int argc, char **argv)
 		if (args.size () != 2) return ("ERROR 10"); // arguments invalides
 
 		std::string other_username = args [1];
-		if (usernames.find (other_username) != usernames.end ()) return ("ERROR 21"); // pseudo inexistant
+		if (usernames.find (other_username) == usernames.end ()) return ("ERROR 21"); // pseudo inexistant
 
 		client.StartTalking ({"msgpv", other_username});
 
